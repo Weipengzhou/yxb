@@ -1,33 +1,55 @@
-package main
-
+package main 
 import (
-	"fmt"
-	"io/ioutil"
-  "net/http"
-  "log"
+    "fmt"
+    "io/ioutil"
+    "net/http"	
+    "encoding/json"
 
 )
 
-func httpGet() {
-	resp, err := http.Get("https://recommd.xyq.cbg.163.com/cgi-bin/recommend.py?act=recommd_by_role&server_id=554&areaid=58&server_name=%E5%85%B0%E4%BA%AD%E5%BA%8F&page=1&view_loc=equip_list&count=15")
-	if err != nil {
-		// handle error
-	}
 
+func GetInformation(server_id *string , areaid *string,server_name *string,page *string,query_order *string,kindid *string)(interface{}){
+	
+	resp, err := http.Get("https://recommd.xyq.cbg.163.com/cgi-bin/recommend.py?act=recommd_by_role&server_id="+*server_id+"&areaid="+*areaid+"&server_name="+*server_name+"&page="+*page+"&query_order="+*query_order+"&kindid="+*kindid)
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		// handle error
-	}
-  http.HandleFunc("/", func(writer http.ResponseWriter, request *http.Request) {
-    writer.Header().Set("Access-Control-Allow-Origin", "*")
-    fmt.Fprintln(writer, string(body))
-  })
-  log.Fatal(http.ListenAndServe(":8080",nil))
+	if err != nil { 
+		return err.Error()
+     }
+     result := map[string]interface{}{}
+     json.Unmarshal(body, &result)
+  
 
+	return result
+}
+type Employee struct {  
+    selling_time      string
+    desc              string
+    server_name       string
+    area_name         string
+    price             string
 }
 
-func main() {
-	httpGet()
+func Jisuan(){
+    server_id,areaid,server_name,page,query_order,kindid :="554","58","兰亭序","1","unit_price+ASC","23"
+    resp := GetInformation(&server_id,&areaid,&server_name,&page,&query_order,&kindid )
+    result := resp.(map[string]interface{})
+  
+    for v,i:=range result{        
+        if(v == "equips"){
+           child :=i.([]interface{})
+           for d:=range child{
+             sun := child[d].(map[string]interface {})
+             for a,e:= range sun{
+                fmt.Println(a,e)
+             }
+           }
+        }
+          
+    }
+}
+func main(){
+   
+      Jisuan()
 
 }
